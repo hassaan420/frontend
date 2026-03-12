@@ -1,0 +1,102 @@
+.contact-page {
+  background: #f5f5f5;
+  padding: 2.5rem 0 3rem;
+}
+
+.contact-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.contact-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 2rem;
+  align-items: flex-start;
+}
+
+.contact-info h2 {
+  font-family: 'Rajdhani', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 28px;
+  margin: 0 0 0.75rem;
+}
+
+.contact-info p {
+  font-size: 14px;
+  color: #444;
+  line-height: 1.7;
+  margin-bottom: 1.25rem;
+}
+
+.contact-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.contact-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1.4rem 1.5rem;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.04);
+  font-size: 13px;
+  color: #444;
+}
+
+.contact-card-icon {
+  font-size: 22px;
+  margin-bottom: 0.35rem;
+}
+
+.contact-card-title {
+  font-family: 'Rajdhani', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.contact-card-text {
+  margin-bottom: 0.6rem;
+}
+
+.contact-card-link {
+  font-size: 13px;
+  color: #d0021b;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.contact-card-link:hover {
+  text-decoration: underline;
+}
+
+.contact-form-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1.8rem 1.9rem;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.04);
+}
+
+.contact-form-card h3 {
+  font-family: 'Rajdhani', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 22px;
+  margin: 0 0 0.35rem;
+}
+
+@media (max-width: 960px) {
+  .contact-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .contact-container {
+    padding: 1.5rem 1.25rem;
+  }
+}
+

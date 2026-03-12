@@ -1,0 +1,150 @@
+.about-page {
+  background: #f5f5f5;
+  padding: 2.5rem 0 3rem;
+}
+
+.about-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.about-hero {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 2.2rem 2.5rem;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.06);
+  display: flex;
+  justify-content: space-between;
+  gap: 2rem;
+  align-items: center;
+  margin-bottom: 2.5rem;
+}
+
+.about-hero-text h2 {
+  font-family: 'Rajdhani', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 32px;
+  line-height: 1.15;
+  margin: 0 0 0.75rem;
+}
+
+.about-hero-text p {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #444;
+  max-width: 520px;
+}
+
+.about-hero-badge {
+  background: #d0021b;
+  color: #ffffff;
+  border-radius: 14px;
+  padding: 1.5rem 2rem;
+  text-align: center;
+  min-width: 220px;
+}
+
+.about-badge-main {
+  font-family: 'Rajdhani', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 42px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.about-badge-label {
+  font-size: 13px;
+  margin-top: 0.4rem;
+}
+
+.about-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.about-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1.6rem 1.8rem;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.04);
+  font-size: 14px;
+  color: #444;
+}
+
+.about-card h3 {
+  font-family: 'Rajdhani', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 20px;
+  margin: 0 0 0.75rem;
+}
+
+.about-card ul {
+  padding-left: 1rem;
+  margin: 0;
+}
+
+.about-card li {
+  margin-bottom: 0.4rem;
+}
+
+.about-trust-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.about-trust-item {
+  background: #111;
+  color: #f8f8f8;
+  border-radius: 12px;
+  padding: 1rem 1.2rem;
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.about-trust-icon {
+  font-size: 20px;
+}
+
+.about-trust-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.about-trust-text {
+  font-size: 12px;
+  color: #cccccc;
+  margin-top: 2px;
+}
+
+@media (max-width: 960px) {
+  .about-hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .about-hero-badge {
+    align-self: stretch;
+    text-align: center;
+  }
+
+  .about-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .about-trust-strip {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .about-container {
+    padding: 1.5rem 1.25rem;
+  }
+
+  .about-trust-strip {
+    grid-template-columns: 1fr;
+  }
+}
+
