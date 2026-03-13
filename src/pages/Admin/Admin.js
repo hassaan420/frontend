@@ -13,6 +13,15 @@ const Admin = () => {
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ name: '', description: '', price: '', category: 'Engine Parts', brand: '', stock: '', compatibleWith: '' });
   const [msg, setMsg] = useState('');
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState('');
+  const [imageUploading, setImageUploading] = useState(false);
+  const [editProduct, setEditProduct] = useState(null);
+  const [editForm, setEditForm] = useState({});
+  const [editMsg, setEditMsg] = useState('');
+  const [editImageFile, setEditImageFile] = useState(null);
+  const [editImagePreview, setEditImagePreview] = useState('');
+  const [editImageUploading, setEditImageUploading] = useState(false);
   const [banners, setBanners] = useState([]);
   const [bannerForm, setBannerForm] = useState({ title: '', subtitle: '', buttonText: 'Shop Now', buttonLink: '/products', backgroundColor: '#d0021b', textColor: '#ffffff', order: 0, position: 'hero' });
   const [bannerMsg, setBannerMsg] = useState('');
@@ -41,14 +50,77 @@ const Admin = () => {
     setLoading(false);
   };
 
+  // Image handlers
+  const handleImageChange = (e, isEdit = false) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (isEdit) { setEditImageFile(file); setEditImagePreview(URL.createObjectURL(file)); }
+    else { setImageFile(file); setImagePreview(URL.createObjectURL(file)); }
+  };
+
+  const handleImageUpload = async (isEdit = false) => {
+    const file = isEdit ? editImageFile : imageFile;
+    if (!file) return null;
+    const formData = new FormData();
+    formData.append('image', file);
+    if (isEdit) setEditImageUploading(true); else setImageUploading(true);
+    try {
+      const res = await api.post('/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      if (isEdit) setEditImageUploading(false); else setImageUploading(false);
+      return res.data.url;
+    } catch {
+      if (isEdit) setEditImageUploading(false); else setImageUploading(false);
+      return null;
+    }
+  };
+
   const handleAddProduct = async () => {
     if (!form.name || !form.price || !form.brand) { setMsg('❌ Name, price and brand are required'); return; }
     try {
-      await api.post('/products', { ...form, price: Number(form.price), stock: Number(form.stock) || 0, compatibleWith: form.compatibleWith.split(',').map(s => s.trim()).filter(Boolean) });
+      let images = [];
+      if (imageFile) { const url = await handleImageUpload(false); if (url) images = [url]; }
+      await api.post('/products', {
+        ...form, price: Number(form.price), stock: Number(form.stock) || 0,
+        compatibleWith: form.compatibleWith.split(',').map(s => s.trim()).filter(Boolean),
+        images
+      });
       setMsg('✅ Product added!');
       setForm({ name: '', description: '', price: '', category: 'Engine Parts', brand: '', stock: '', compatibleWith: '' });
+      setImageFile(null); setImagePreview('');
       fetchData();
     } catch (err) { setMsg('❌ ' + (err.response?.data?.message || 'Failed')); }
+  };
+
+  const handleEditClick = (product) => {
+    setEditProduct(product);
+    setEditForm({
+      name: product.name, description: product.description || '',
+      price: product.price, category: product.category, brand: product.brand,
+      stock: product.stock, compatibleWith: product.compatibleWith?.join(', ') || '',
+      images: product.images || []
+    });
+    setEditImagePreview(''); setEditImageFile(null); setEditMsg('');
+    setTab('edit_product');
+  };
+
+  const handleUpdateProduct = async () => {
+    if (!editForm.name || !editForm.price || !editForm.brand) { setEditMsg('❌ Name, price and brand are required'); return; }
+    try {
+      let images = editForm.images || [];
+      if (editImageFile) { const url = await handleImageUpload(true); if (url) images = [url, ...images]; }
+      await api.put(`/products/${editProduct._id}`, {
+        ...editForm, price: Number(editForm.price), stock: Number(editForm.stock) || 0,
+        compatibleWith: editForm.compatibleWith.split(',').map(s => s.trim()).filter(Boolean),
+        images
+      });
+      setEditMsg('✅ Product updated!');
+      fetchData();
+      setTimeout(() => setTab('products'), 1500);
+    } catch (err) { setEditMsg('❌ ' + (err.response?.data?.message || 'Failed')); }
+  };
+
+  const handleRemoveEditImage = (idx) => {
+    setEditForm(f => ({ ...f, images: f.images.filter((_, i) => i !== idx) }));
   };
 
   const handleDelete = async (id) => {
@@ -80,7 +152,6 @@ const Admin = () => {
   };
 
   const statusClass = s => ({ pending: 'status-pending', approved: 'status-processing', processing: 'status-processing', dispatched: 'status-dispatched', delivered: 'status-delivered', cancelled: 'status-cancelled' }[s] || 'status-pending');
-
   const positionLabel = p => ({ hero: '🏠 Hero (Top)', promo_strip: '🔥 Promo Strip (Middle)', below_categories: '📦 Below Categories' }[p] || p);
 
   // ANALYTICS
@@ -102,6 +173,29 @@ const Admin = () => {
   const monthlyRevenue = Object.entries(monthlyData).sort((a, b) => a[0].localeCompare(b[0])).slice(-6).map(([, v]) => v);
   const maxRevenue = Math.max(...monthlyRevenue.map(m => m.revenue), 1);
   const lowStock = products.filter(p => p.stock <= 5).sort((a, b) => a.stock - b.stock);
+
+  // Image Upload Box Component
+  const ImageUploadBox = ({ preview, onChange, uploading, label = 'Product Image' }) => (
+    <div className="form-group" style={{ gridColumn: '1/-1' }}>
+      <label className="form-label">{label}</label>
+      <div style={{ border: '2px dashed #e8e8e8', borderRadius: 8, padding: '20px', textAlign: 'center', background: '#fafafa', cursor: 'pointer', position: 'relative' }}>
+        {preview ? (
+          <div>
+            <img src={preview} alt="preview" style={{ maxHeight: 200, maxWidth: '100%', borderRadius: 8, marginBottom: 10 }} />
+            <div style={{ fontSize: 12, color: '#28a745', fontWeight: 600 }}>✅ Image ready to upload</div>
+          </div>
+        ) : (
+          <div>
+            <div style={{ fontSize: 40, marginBottom: 8 }}>📸</div>
+            <div style={{ fontSize: 14, color: '#666', marginBottom: 8 }}>Click to select image</div>
+            <div style={{ fontSize: 11, color: '#999' }}>JPG, PNG, WEBP — max 5MB</div>
+          </div>
+        )}
+        <input type="file" accept="image/*" onChange={onChange} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', width: '100%', height: '100%' }} />
+      </div>
+      {uploading && <div style={{ marginTop: 8, fontSize: 13, color: '#d0021b', fontWeight: 600 }}>⏳ Uploading image to Cloudinary...</div>}
+    </div>
+  );
 
   return (
     <>
@@ -355,10 +449,15 @@ const Admin = () => {
               </div>
               {loading ? <div className="loader-wrap"><div className="loader"></div></div> : (
                 <table className="data-table">
-                  <thead><tr><th>Name</th><th>Brand</th><th>Category</th><th>Price</th><th>Stock</th><th>Action</th></tr></thead>
+                  <thead><tr><th>Image</th><th>Name</th><th>Brand</th><th>Category</th><th>Price</th><th>Stock</th><th>Actions</th></tr></thead>
                   <tbody>
                     {products.map(p => (
                       <tr key={p._id}>
+                        <td>
+                          {p.images?.[0]
+                            ? <img src={p.images[0]} alt={p.name} style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 6, border: '1px solid #e8e8e8' }} />
+                            : <div style={{ width: 48, height: 48, background: '#f1f1f1', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>🔧</div>}
+                        </td>
                         <td>
                           <div style={{ fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, textTransform: 'uppercase' }}>{p.name}</div>
                           {p.compatibleWith?.length > 0 && <div style={{ fontSize: 11, color: '#999' }}>{p.compatibleWith.slice(0, 2).join(', ')}</div>}
@@ -367,7 +466,10 @@ const Admin = () => {
                         <td style={{ fontSize: 12 }}>{p.category}</td>
                         <td style={{ fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, color: '#d0021b' }}>Rs. {p.price?.toLocaleString()}</td>
                         <td><span style={{ padding: '3px 10px', borderRadius: 4, fontSize: 12, fontWeight: 600, background: p.stock > 5 ? '#d4edda' : p.stock > 0 ? '#fff3cd' : '#f8d7da', color: p.stock > 5 ? '#155724' : p.stock > 0 ? '#856404' : '#721c24' }}>{p.stock}</span></td>
-                        <td><button onClick={() => handleDelete(p._id)} style={{ background: 'none', border: '1px solid #ffcccc', color: '#d0021b', padding: '4px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer' }}>Delete</button></td>
+                        <td style={{ display: 'flex', gap: 6 }}>
+                          <button onClick={() => handleEditClick(p)} style={{ background: 'none', border: '1px solid #007bff', color: '#007bff', padding: '4px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer' }}>✏️ Edit</button>
+                          <button onClick={() => handleDelete(p._id)} style={{ background: 'none', border: '1px solid #ffcccc', color: '#d0021b', padding: '4px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer' }}>Delete</button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -375,7 +477,31 @@ const Admin = () => {
               )}
             </div>
           )}
-
+          {/* DANGER ZONE */}
+          <div className="admin-card" style={{ borderTop: '3px solid #d0021b', marginTop: '1.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: 18, fontWeight: 700, textTransform: 'uppercase', color: '#d0021b' }}>⚠️ Danger Zone</div>
+                <div style={{ fontSize: 13, color: '#666', marginTop: 4 }}>Permanently delete all orders from database. Products and users will NOT be affected.</div>
+              </div>
+              <button
+                onClick={async () => {
+                  if (!window.confirm('⚠️ Are you sure? This will permanently delete ALL orders and cannot be undone!')) return;
+                  if (!window.confirm('🚨 FINAL WARNING — Delete all orders forever?')) return;
+                  try {
+                    await api.delete('/orders/clear/all');
+                    alert('✅ All orders cleared successfully!');
+                    fetchData();
+                  } catch (err) {
+                    alert('❌ Failed: ' + (err.response?.data?.message || err.message));
+                  }
+                }}
+                style={{ background: '#d0021b', color: 'white', border: 'none', padding: '10px 20px', borderRadius: 6, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}
+              >
+                🗑️ Clear All Orders
+              </button>
+            </div>
+          </div>
           {/* ADD PRODUCT */}
           {tab === 'add_product' && (
             <div className="admin-card" style={{ maxWidth: 700 }}>
@@ -393,8 +519,52 @@ const Admin = () => {
                 <div className="form-group"><label className="form-label">Stock Quantity</label><input className="form-input" type="number" placeholder="50" value={form.stock} onChange={e => setForm({ ...form, stock: e.target.value })} /></div>
                 <div className="form-group" style={{ gridColumn: '1/-1' }}><label className="form-label">Compatible With (comma separated)</label><input className="form-input" placeholder="Honda CD70, Honda CG125, Yamaha YBR" value={form.compatibleWith} onChange={e => setForm({ ...form, compatibleWith: e.target.value })} /></div>
                 <div className="form-group" style={{ gridColumn: '1/-1' }}><label className="form-label">Description</label><textarea className="form-input" rows={3} placeholder="Product description..." value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} /></div>
+                <ImageUploadBox preview={imagePreview} onChange={e => handleImageChange(e, false)} uploading={imageUploading} label="Product Image (optional)" />
               </div>
-              <button className="btn-red" onClick={handleAddProduct}>+ Add Product</button>
+              <button className="btn-red" onClick={handleAddProduct} disabled={imageUploading} style={{ marginTop: '1rem', opacity: imageUploading ? 0.7 : 1 }}>
+                {imageUploading ? '⏳ Uploading...' : '+ Add Product'}
+              </button>
+            </div>
+          )}
+
+          {/* EDIT PRODUCT */}
+          {tab === 'edit_product' && editProduct && (
+            <div className="admin-card" style={{ maxWidth: 700 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', paddingBottom: 12, borderBottom: '2px solid #d0021b' }}>
+                <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: 22, fontWeight: 700, textTransform: 'uppercase' }}>✏️ Edit Product</div>
+                <button onClick={() => setTab('products')} style={{ background: 'none', border: '1px solid #e8e8e8', padding: '6px 14px', borderRadius: 4, fontSize: 13, cursor: 'pointer' }}>← Back</button>
+              </div>
+              {editMsg && <div className={`alert ${editMsg.includes('✅') ? 'alert-success' : 'alert-error'}`}>{editMsg}</div>}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="form-group" style={{ gridColumn: '1/-1' }}><label className="form-label">Product Name *</label><input className="form-input" value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} /></div>
+                <div className="form-group"><label className="form-label">Brand *</label><input className="form-input" value={editForm.brand} onChange={e => setEditForm({ ...editForm, brand: e.target.value })} /></div>
+                <div className="form-group"><label className="form-label">Category *</label>
+                  <select className="form-select" value={editForm.category} onChange={e => setEditForm({ ...editForm, category: e.target.value })}>
+                    {['Engine Parts', 'Brakes & Suspension', 'Electrical & Lights', 'Body Parts & Panels', 'Tyres & Wheels', 'Oils & Lubricants', 'Accessories'].map(c => <option key={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div className="form-group"><label className="form-label">Price (Rs.) *</label><input className="form-input" type="number" value={editForm.price} onChange={e => setEditForm({ ...editForm, price: e.target.value })} /></div>
+                <div className="form-group"><label className="form-label">Stock Quantity</label><input className="form-input" type="number" value={editForm.stock} onChange={e => setEditForm({ ...editForm, stock: e.target.value })} /></div>
+                <div className="form-group" style={{ gridColumn: '1/-1' }}><label className="form-label">Compatible With (comma separated)</label><input className="form-input" value={editForm.compatibleWith} onChange={e => setEditForm({ ...editForm, compatibleWith: e.target.value })} /></div>
+                <div className="form-group" style={{ gridColumn: '1/-1' }}><label className="form-label">Description</label><textarea className="form-input" rows={3} value={editForm.description} onChange={e => setEditForm({ ...editForm, description: e.target.value })} /></div>
+                {editForm.images?.length > 0 && (
+                  <div className="form-group" style={{ gridColumn: '1/-1' }}>
+                    <label className="form-label">Current Images</label>
+                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                      {editForm.images.map((img, idx) => (
+                        <div key={idx} style={{ position: 'relative' }}>
+                          <img src={img} alt="" style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 6, border: '1px solid #e8e8e8' }} />
+                          <button onClick={() => handleRemoveEditImage(idx)} style={{ position: 'absolute', top: -6, right: -6, background: '#d0021b', border: 'none', color: 'white', width: 20, height: 20, borderRadius: '50%', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <ImageUploadBox preview={editImagePreview} onChange={e => handleImageChange(e, true)} uploading={editImageUploading} label="Add New Image" />
+              </div>
+              <button className="btn-red" onClick={handleUpdateProduct} disabled={editImageUploading} style={{ marginTop: '1rem', opacity: editImageUploading ? 0.7 : 1 }}>
+                {editImageUploading ? '⏳ Uploading...' : '💾 Save Changes'}
+              </button>
             </div>
           )}
 
@@ -402,19 +572,12 @@ const Admin = () => {
           {tab === 'banners' && (
             <div>
               <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: 26, fontWeight: 700, textTransform: 'uppercase', marginBottom: '1.5rem', paddingBottom: 12, borderBottom: '2px solid #d0021b' }}>🖼️ Banner Management</div>
-
               <div className="admin-card" style={{ marginBottom: '1.5rem', maxWidth: 700 }}>
                 <div className="admin-card-title">Add New Banner</div>
                 {bannerMsg && <div className={`alert ${bannerMsg.includes('✅') ? 'alert-success' : 'alert-error'}`}>{bannerMsg}</div>}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                  <div className="form-group" style={{ gridColumn: '1/-1' }}>
-                    <label className="form-label">Banner Title *</label>
-                    <input className="form-input" placeholder="e.g. Eid Sale — 20% Off All Parts" value={bannerForm.title} onChange={e => setBannerForm({ ...bannerForm, title: e.target.value })} />
-                  </div>
-                  <div className="form-group" style={{ gridColumn: '1/-1' }}>
-                    <label className="form-label">Subtitle</label>
-                    <input className="form-input" placeholder="e.g. Genuine parts for Honda, Yamaha & more" value={bannerForm.subtitle} onChange={e => setBannerForm({ ...bannerForm, subtitle: e.target.value })} />
-                  </div>
+                  <div className="form-group" style={{ gridColumn: '1/-1' }}><label className="form-label">Banner Title *</label><input className="form-input" placeholder="e.g. Eid Sale — 20% Off All Parts" value={bannerForm.title} onChange={e => setBannerForm({ ...bannerForm, title: e.target.value })} /></div>
+                  <div className="form-group" style={{ gridColumn: '1/-1' }}><label className="form-label">Subtitle</label><input className="form-input" placeholder="e.g. Genuine parts for Honda, Yamaha & more" value={bannerForm.subtitle} onChange={e => setBannerForm({ ...bannerForm, subtitle: e.target.value })} /></div>
                   <div className="form-group" style={{ gridColumn: '1/-1' }}>
                     <label className="form-label">Where to display this banner? *</label>
                     <select className="form-select" value={bannerForm.position} onChange={e => setBannerForm({ ...bannerForm, position: e.target.value })}>
@@ -423,14 +586,8 @@ const Admin = () => {
                       <option value="below_categories">📦 Below Categories — After category grid</option>
                     </select>
                   </div>
-                  <div className="form-group">
-                    <label className="form-label">Button Text</label>
-                    <input className="form-input" placeholder="Shop Now" value={bannerForm.buttonText} onChange={e => setBannerForm({ ...bannerForm, buttonText: e.target.value })} />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Button Link</label>
-                    <input className="form-input" placeholder="/products" value={bannerForm.buttonLink} onChange={e => setBannerForm({ ...bannerForm, buttonLink: e.target.value })} />
-                  </div>
+                  <div className="form-group"><label className="form-label">Button Text</label><input className="form-input" placeholder="Shop Now" value={bannerForm.buttonText} onChange={e => setBannerForm({ ...bannerForm, buttonText: e.target.value })} /></div>
+                  <div className="form-group"><label className="form-label">Button Link</label><input className="form-input" placeholder="/products" value={bannerForm.buttonLink} onChange={e => setBannerForm({ ...bannerForm, buttonLink: e.target.value })} /></div>
                   <div className="form-group">
                     <label className="form-label">Background Color</label>
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -438,17 +595,12 @@ const Admin = () => {
                       <input className="form-input" value={bannerForm.backgroundColor} onChange={e => setBannerForm({ ...bannerForm, backgroundColor: e.target.value })} style={{ flex: 1 }} />
                     </div>
                   </div>
-                  <div className="form-group">
-                    <label className="form-label">Display Order</label>
-                    <input className="form-input" type="number" placeholder="0" value={bannerForm.order} onChange={e => setBannerForm({ ...bannerForm, order: Number(e.target.value) })} />
-                  </div>
+                  <div className="form-group"><label className="form-label">Display Order</label><input className="form-input" type="number" placeholder="0" value={bannerForm.order} onChange={e => setBannerForm({ ...bannerForm, order: Number(e.target.value) })} /></div>
                 </div>
                 <div style={{ marginBottom: '1rem' }}>
                   <label className="form-label">Live Preview</label>
                   <div style={{ background: bannerForm.backgroundColor, borderRadius: 8, padding: '24px 32px', color: bannerForm.textColor }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', opacity: 0.7, marginBottom: 6 }}>
-                      {bannerForm.position === 'hero' ? '🏠 HERO SECTION' : bannerForm.position === 'promo_strip' ? '🔥 PROMO STRIP' : '📦 BELOW CATEGORIES'}
-                    </div>
+                    <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', opacity: 0.7, marginBottom: 6 }}>{bannerForm.position === 'hero' ? '🏠 HERO SECTION' : bannerForm.position === 'promo_strip' ? '🔥 PROMO STRIP' : '📦 BELOW CATEGORIES'}</div>
                     <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: 28, fontWeight: 700, textTransform: 'uppercase' }}>{bannerForm.title || 'Banner Title'}</div>
                     <div style={{ fontSize: 14, opacity: 0.85, marginTop: 6, marginBottom: 16 }}>{bannerForm.subtitle || 'Banner subtitle goes here'}</div>
                     <div style={{ display: 'inline-block', background: 'white', color: bannerForm.backgroundColor, padding: '8px 20px', borderRadius: 5, fontWeight: 700, fontSize: 13 }}>{bannerForm.buttonText}</div>
@@ -456,14 +608,10 @@ const Admin = () => {
                 </div>
                 <button className="btn-red" onClick={handleAddBanner}>+ Add Banner</button>
               </div>
-
               <div className="admin-card">
                 <div className="admin-card-title">All Banners ({banners.length})</div>
                 {banners.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
-                    <div style={{ fontSize: 40, marginBottom: 12 }}>🖼️</div>
-                    <div>No banners yet. Add your first banner above!</div>
-                  </div>
+                  <div style={{ textAlign: 'center', padding: '40px', color: '#999' }}><div style={{ fontSize: 40, marginBottom: 12 }}>🖼️</div><div>No banners yet. Add your first banner above!</div></div>
                 ) : banners.map(b => (
                   <div key={b._id} style={{ border: '1px solid #e8e8e8', borderRadius: 8, marginBottom: '1rem', overflow: 'hidden' }}>
                     <div style={{ background: b.backgroundColor, padding: '20px 24px', color: b.textColor }}>
@@ -504,11 +652,7 @@ const Admin = () => {
                         <td style={{ fontFamily: 'Rajdhani,sans-serif', fontWeight: 700 }}>{u.name}</td>
                         <td style={{ fontSize: 13, color: '#444' }}>{u.email}</td>
                         <td style={{ fontSize: 13 }}>{u.phone || '—'}</td>
-                        <td>
-                          <span style={{ padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700, background: u.isAdmin ? '#d4edda' : '#f1f1f1', color: u.isAdmin ? '#155724' : '#666' }}>
-                            {u.isAdmin ? '🔑 Admin' : '👤 Customer'}
-                          </span>
-                        </td>
+                        <td><span style={{ padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700, background: u.isAdmin ? '#d4edda' : '#f1f1f1', color: u.isAdmin ? '#155724' : '#666' }}>{u.isAdmin ? '🔑 Admin' : '👤 Customer'}</span></td>
                         <td style={{ fontSize: 12, color: '#999' }}>{new Date(u.createdAt).toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
                       </tr>
                     ))}

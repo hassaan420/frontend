@@ -49,7 +49,7 @@ const ProductDetail = () => {
           {/* Image */}
           <div className="product-detail-image">
             {product.images && product.images.length > 0 ? (
-              <img src={`http://localhost:5000/${product.images[0]}`} alt={product.name} />
+              <img src={product.images[0]} alt={product.name} />
             ) : (
               <div className="no-image-large">🔧</div>
             )}
