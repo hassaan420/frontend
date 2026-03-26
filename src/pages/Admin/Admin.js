@@ -229,24 +229,33 @@ const Admin = () => {
           {tab === 'dashboard' && (
             <div>
               <div className="stat-cards">
-                <div className="stat-card"><div className="stat-card-num">{products.length}</div><div className="stat-card-label">Total Products</div></div>
-                <div className="stat-card"><div className="stat-card-num">{orders.length}</div><div className="stat-card-label">Total Orders</div></div>
-                <div className="stat-card"><div className="stat-card-num">{pendingOrders.length}</div><div className="stat-card-label">Pending Orders</div></div>
-                <div className="stat-card"><div className="stat-card-num" style={{ fontSize: 22 }}>Rs. {(totalRevenue / 1000).toFixed(1)}k</div><div className="stat-card-label">Total Revenue</div></div>
-                <div className="stat-card" style={{ cursor: 'pointer' }} onClick={() => setTab('users')}><div className="stat-card-num">{users.length}</div><div className="stat-card-label">Registered Users</div></div>
+                {[
+                  { icon: '🔧', num: products.length, label: 'Total Products', color: '#2563EB', bg: '#EFF6FF' },
+                  { icon: '📦', num: orders.length, label: 'Total Orders', color: '#7C3AED', bg: '#F5F3FF' },
+                  { icon: '⏳', num: pendingOrders.length, label: 'Pending Orders', color: '#D97706', bg: '#FFFBEB' },
+                  { icon: '💰', num: `Rs. ${(totalRevenue/1000).toFixed(1)}k`, label: 'Total Revenue', color: '#C0001A', bg: 'rgba(192,0,26,0.07)' },
+                  { icon: '👥', num: users.length, label: 'Registered Users', color: '#059669', bg: '#ECFDF5', onClick: () => setTab('users') },
+                ].map(({ icon, num, label, color, bg, onClick }) => (
+                  <div className="stat-card" key={label} style={{ cursor: onClick ? 'pointer' : 'default' }} onClick={onClick}>
+                    <div className="stat-card-accent" style={{ background: color }}></div>
+                    <div className="stat-card-icon" style={{ background: bg }}>{icon}</div>
+                    <div className="stat-card-num" style={{ color }}>{num}</div>
+                    <div className="stat-card-label">{label}</div>
+                  </div>
+                ))}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
-                <div style={{ background: '#d4edda', border: '1px solid #c3e6cb', borderRadius: 10, padding: '16px 20px' }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: '#155724', marginBottom: 4 }}>✅ Delivered</div>
-                  <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: 28, fontWeight: 700, color: '#155724' }}>{deliveredOrders.length}</div>
+                <div style={{ background: 'var(--success-bg)', border: '1px solid var(--success-border)', borderRadius: 'var(--r-lg)', padding: '16px 20px' }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: 'var(--success)', marginBottom: 4 }}>✅ Delivered</div>
+                  <div style={{ fontFamily: 'var(--font-heading)', fontSize: 28, fontWeight: 700, color: 'var(--success)' }}>{deliveredOrders.length}</div>
                 </div>
-                <div style={{ background: '#fff3cd', border: '1px solid #ffeeba', borderRadius: 10, padding: '16px 20px' }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: '#856404', marginBottom: 4 }}>⏳ Pending</div>
-                  <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: 28, fontWeight: 700, color: '#856404' }}>{pendingOrders.length}</div>
+                <div style={{ background: 'var(--warning-bg)', border: '1px solid var(--warning-border)', borderRadius: 'var(--r-lg)', padding: '16px 20px' }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: 'var(--warning)', marginBottom: 4 }}>⏳ Pending</div>
+                  <div style={{ fontFamily: 'var(--font-heading)', fontSize: 28, fontWeight: 700, color: 'var(--warning)' }}>{pendingOrders.length}</div>
                 </div>
-                <div style={{ background: '#f8d7da', border: '1px solid #f5c6cb', borderRadius: 10, padding: '16px 20px' }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: '#721c24', marginBottom: 4 }}>❌ Cancelled</div>
-                  <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: 28, fontWeight: 700, color: '#721c24' }}>{cancelledOrders.length}</div>
+                <div style={{ background: 'var(--error-bg)', border: '1px solid var(--error-border)', borderRadius: 'var(--r-lg)', padding: '16px 20px' }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: 'var(--error)', marginBottom: 4 }}>❌ Cancelled</div>
+                  <div style={{ fontFamily: 'var(--font-heading)', fontSize: 28, fontWeight: 700, color: 'var(--error)' }}>{cancelledOrders.length}</div>
                 </div>
               </div>
               <div className="admin-card">
@@ -281,11 +290,16 @@ const Admin = () => {
             <div>
               <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: 26, fontWeight: 700, textTransform: 'uppercase', marginBottom: '1.5rem', paddingBottom: 12, borderBottom: '2px solid #d0021b' }}>📈 Sales Analytics & Reports</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
-                {[['💰', 'Total Revenue', `Rs. ${totalRevenue.toLocaleString()}`, '#d0021b'], ['📦', 'Total Orders', orders.length, '#007bff'], ['✅', 'Delivered', deliveredOrders.length, '#28a745'], ['📊', 'Avg Order Value', `Rs. ${orders.length ? Math.round(totalRevenue / orders.length).toLocaleString() : 0}`, '#fd7e14']].map(([icon, label, value, color]) => (
-                  <div key={label} className="admin-card" style={{ textAlign: 'center', borderTop: `3px solid ${color}` }}>
+                {[
+                  ['💰', 'Total Revenue', `Rs. ${totalRevenue.toLocaleString()}`, 'var(--red)'],
+                  ['📦', 'Total Orders', orders.length, 'var(--info)'],
+                  ['✅', 'Delivered', deliveredOrders.length, 'var(--success)'],
+                  ['📊', 'Avg Order Value', `Rs. ${orders.length ? Math.round(totalRevenue / orders.length).toLocaleString() : 0}`, 'var(--warning)']
+                ].map(([icon, label, value, color]) => (
+                  <div key={label} className="admin-card" style={{ textAlign: 'center', borderTop: `3px solid ${color}`, paddingTop: 20 }}>
                     <div style={{ fontSize: 28, marginBottom: 8 }}>{icon}</div>
-                    <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: 24, fontWeight: 700, color }}>{value}</div>
-                    <div style={{ fontSize: 12, color: '#999', textTransform: 'uppercase', letterSpacing: 1, marginTop: 4 }}>{label}</div>
+                    <div style={{ fontFamily: 'var(--font-heading)', fontSize: 24, fontWeight: 700, color }}>{value}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1, marginTop: 4 }}>{label}</div>
                   </div>
                 ))}
               </div>

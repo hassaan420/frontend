@@ -24,34 +24,67 @@ const Register = () => {
   };
 
   return (
-    <>
-      <div className="page-header">
-        <div style={{maxWidth:1280,margin:'0 auto'}}>
-          <div className="breadcrumb"><Link to="/">Home</Link><span>›</span><span>Register</span></div>
-          <h1>Create Account</h1>
+    <div style={{ minHeight: 'calc(100vh - 200px)', display: 'flex', alignItems: 'center', background: 'var(--bg-soft)', padding: '2rem 1rem' }}>
+      <div style={{ maxWidth: 500, width: '100%', margin: '0 auto' }}>
+        {/* Header */}
+        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+          <div style={{ width: 56, height: 56, background: 'var(--red)', borderRadius: 'var(--r-md)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
+            <span style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: 22, color: 'white' }}>SH</span>
+          </div>
+          <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: 26, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text)' }}>
+            Create Account
+          </h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 4 }}>
+            Join Saad Hashim Auto Store — Pakistan-wide delivery
+          </p>
         </div>
-      </div>
-      <div style={{maxWidth:480,margin:'3rem auto',padding:'0 2rem'}}>
+
+        {/* Perks strip */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: '1.5rem' }}>
+          {[['🚚', 'COD Available'], ['✅', 'Track Orders'], ['🎁', 'Members Deals']].map(([icon, label]) => (
+            <div key={label} style={{ background: 'white', border: '1px solid var(--border)', borderRadius: 'var(--r-md)', padding: '10px', textAlign: 'center', fontSize: 12, color: 'var(--text-secondary)', fontWeight: 500 }}>
+              <div style={{ fontSize: 20, marginBottom: 4 }}>{icon}</div>
+              {label}
+            </div>
+          ))}
+        </div>
+
+        {/* Form */}
         <div className="admin-card">
-          <div style={{textAlign:'center',marginBottom:'2rem'}}>
-            <div style={{fontFamily:'Rajdhani,sans-serif',fontSize:28,fontWeight:700,textTransform:'uppercase'}}>Create Account</div>
-            <div style={{fontSize:14,color:'#666',marginTop:6}}>Join Saad Hashim Auto Store</div>
-          </div>
           {error && <div className="alert alert-error">{error}</div>}
-          <div className="form-group"><label className="form-label">Full Name *</label><input className="form-input" placeholder="Your full name" value={form.name} onChange={e => setForm({...form,name:e.target.value})} /></div>
-          <div className="form-group"><label className="form-label">Email *</label><input className="form-input" type="email" placeholder="your@email.com" value={form.email} onChange={e => setForm({...form,email:e.target.value})} /></div>
-          <div className="form-group"><label className="form-label">Phone / WhatsApp</label><input className="form-input" placeholder="03xx xxxxxxx" value={form.phone} onChange={e => setForm({...form,phone:e.target.value})} /></div>
-          <div className="form-group"><label className="form-label">Password *</label><input className="form-input" type="password" placeholder="Min 6 characters" value={form.password} onChange={e => setForm({...form,password:e.target.value})} /></div>
-          <div className="form-group"><label className="form-label">Confirm Password *</label><input className="form-input" type="password" placeholder="Repeat password" value={form.confirmPassword} onChange={e => setForm({...form,confirmPassword:e.target.value})} /></div>
-          <button className="btn-red" style={{width:'100%',justifyContent:'center',padding:14,opacity:loading?0.7:1}} onClick={handleSubmit} disabled={loading}>
-            {loading ? 'Creating Account...' : 'Create Account →'}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div className="form-group">
+              <label className="form-label">Full Name *</label>
+              <input className="form-input" placeholder="Your full name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Phone / WhatsApp</label>
+              <input className="form-input" placeholder="03xx xxxxxxx" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
+            </div>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Email *</label>
+            <input className="form-input" type="email" placeholder="your@email.com" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div className="form-group">
+              <label className="form-label">Password *</label>
+              <input className="form-input" type="password" placeholder="Min 6 characters" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Confirm Password *</label>
+              <input className="form-input" type="password" placeholder="Repeat password" value={form.confirmPassword} onChange={e => setForm({ ...form, confirmPassword: e.target.value })} />
+            </div>
+          </div>
+          <button className="btn-red" style={{ width: '100%', justifyContent: 'center', padding: 14, opacity: loading ? 0.7 : 1 }} onClick={handleSubmit} disabled={loading}>
+            {loading ? '⏳ Creating Account...' : 'Create Account →'}
           </button>
-          <div style={{textAlign:'center',marginTop:'1.5rem',fontSize:14,color:'#666'}}>
-            Already have an account? <Link to="/login" style={{color:'#d0021b',fontWeight:600}}>Login here</Link>
+          <div style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: 13, color: 'var(--text-muted)' }}>
+            Already have an account? <Link to="/login" style={{ color: 'var(--red)', fontWeight: 600 }}>Login here</Link>
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
